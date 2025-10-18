@@ -1,0 +1,64 @@
+name: educode
+description: "A new Flutter project."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.6.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  lottie: ^3.2.1
+  cupertino_icons: ^1.0.8
+  audioplayers: ^6.0.0
+  game_levels_scrolling_map: ^0.0.3
+  path_provider: ^2.1.2
+  path: ^1.9.0
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  # To add assets to your application, add an assets section, like this:
+  assets:
+  - assets/images/bghome.jpeg
+  - assets/sounds/bg_music.mp3
+  - assets/lottie/cat.json
+  - assets/images/title.png
+  - assets/images/logo.png
+  - assets/svg/map_vertical.svg
+  - assets/drawable/map_vertical.png
+
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/to/resolution-aware-images
+
+  # For details regarding adding assets from package dependencies, see
+  # https://flutter.dev/to/asset-from-package
+
+  # To add custom fonts to your application, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+  fonts:
+    - family: fredoka
+      fonts:
+      - asset: fonts/fredoka/Fredoka-Medium.ttf
+      # - asset: fonts/fredoka/Fredoka-Italic.ttf
+      #   style: italic
+    - family: arimo
+      fonts:
+      - asset: fonts/arimo/Arimo-Medium.ttf
+  #       - asset: fonts/TrajanPro.ttf
+  #       - asset: fonts/TrajanPro_Bold.ttf
+  #         weight: 700
+  #
+  # For details regarding fonts from package dependencies,
+  # see https://flutter.dev/to/font-from-package
