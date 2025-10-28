@@ -4,6 +4,9 @@ import 'package:game_levels_scrolling_map/model/point_model.dart';
 import 'db/db_helper.dart';
 
 import 'levels/level1_screen.dart';
+import 'levels/level2_screen.dart';
+import 'levels/level3_screen.dart';
+import 'levels/level4_screen.dart';
 
 class RoadmapScreen extends StatefulWidget {
   const RoadmapScreen({super.key});
@@ -78,6 +81,15 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
     switch (level) {
       case 1:
         page = const Level1Screen();
+        break;
+      case 2:
+        page = const Level2Screen();
+        break;
+      case 3:
+        page = const Level3Screen();
+        break;
+      case 4:
+        page = const Level4Screen();
         break;
       default:
         ScaffoldMessenger.of(context).showSnackBar(

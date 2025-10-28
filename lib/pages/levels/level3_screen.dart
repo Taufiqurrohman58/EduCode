@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
-import 'level2_screen.dart';
+import 'level4_screen.dart';
 
-class Level1Screen extends StatefulWidget {
-  const Level1Screen({super.key});
+class Level3Screen extends StatefulWidget {
+  const Level3Screen({super.key});
 
   @override
-  State<Level1Screen> createState() => _Level1ScreenState();
+  State<Level3Screen> createState() => _Level3ScreenState();
 }
 
-class _Level1ScreenState extends State<Level1Screen>
+class _Level3ScreenState extends State<Level3Screen>
 with SingleTickerProviderStateMixin {
   final Map<String, String> correctMapping = {
-    'snake.png': '1',
-    'zebra.png': '2',
-    'cat.png': '3',
-    'fish.png': '4',
-    'monkey.png': '5',
-    'koala.png': '6',
+    'apple.png': '1',
+    'orange.png': '2',
+    'grapes.png': '3',
+    'mango.png': '4',
+    'bananas.png': '5',
+    'watermelon.png': '6',
   };
 
-  Map<String, String?> droppedAnimals = {
+  Map<String, String?> droppedFruits = {
     '1': null,
     '2': null,
     '3': null,
@@ -28,13 +28,13 @@ with SingleTickerProviderStateMixin {
     '6': null,
   };
 
-  List<String> availableAnimals = [
-    'snake.png',
-    'zebra.png',
-    'cat.png',
-    'fish.png',
-    'monkey.png',
-    'koala.png',
+  List<String> availableFruits = [
+    'apple.png',
+    'orange.png',
+    'grapes.png',
+    'mango.png',
+    'bananas.png',
+    'watermelon.png',
   ];
 
   late AnimationController _controller;
@@ -57,11 +57,11 @@ with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
-  bool get allDropped => !droppedAnimals.values.contains(null);
+  bool get allDropped => !droppedFruits.values.contains(null);
 
   void restartLevel(){
     setState((){
-      droppedAnimals = {
+      droppedFruits = {
         '1': null,
         '2': null,
         '3': null,
@@ -69,13 +69,13 @@ with SingleTickerProviderStateMixin {
         '5': null,
         '6': null,
       };
-      availableAnimals = [
-        'snake.png',
-        'zebra.png',
-        'cat.png',
-        'fish.png',
-        'monkey.png',
-        'koala.png',
+      availableFruits = [
+        'apple.png',
+        'orange.png',
+        'grapes.png',
+        'mango.png',
+        'bananas.png',
+        'watermelon.png',
       ];
       lastCheckedStatus = null;
       hasWon = false;
@@ -127,9 +127,9 @@ with SingleTickerProviderStateMixin {
     if (!allDropped || hasWon) return;
 
     bool allCorrect = true;
-    for (var entry in droppedAnimals.entries) {
-      final animal = entry.value;
-      if (animal == null || correctMapping[animal] != entry.key){
+    for (var entry in droppedFruits.entries) {
+      final fruit = entry.value;
+      if (fruit == null || correctMapping[fruit] != entry.key){
         allCorrect = false;
         break;
       }
@@ -150,7 +150,7 @@ with SingleTickerProviderStateMixin {
     }
   }
 
-  Widget animalIcon(String assetName, String label) {
+  Widget fruitIcon(String assetName, String label) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -169,31 +169,31 @@ with SingleTickerProviderStateMixin {
   }
 
   Widget boxedNumber(String number) {
-    final isCorrect = droppedAnimals[number] != null && correctMapping[droppedAnimals[number]] == number;
+    final isCorrect = droppedFruits[number] != null && correctMapping[droppedFruits[number]] == number;
     return Expanded(
       child: DragTarget<String>(
         onAcceptWithDetails: (details) {
-          final animal = details.data;
+          final fruit = details.data;
           setState(() {
-            if (droppedAnimals[number] != null) {
-              if (!availableAnimals.contains(droppedAnimals[number]!)) {
-                availableAnimals.add(droppedAnimals[number]!);
+            if (droppedFruits[number] != null) {
+              if (!availableFruits.contains(droppedFruits[number]!)) {
+                availableFruits.add(droppedFruits[number]!);
               }
             }
-            droppedAnimals.updateAll((key, value) {
-              if (value == animal) return null;
+            droppedFruits.updateAll((key, value) {
+              if (value == fruit) return null;
               return value;
             });
 
-            droppedAnimals[number] = animal;
-            availableAnimals.remove(animal);
+            droppedFruits[number] = fruit;
+            availableFruits.remove(fruit);
           });
 
           Future.delayed(const Duration(milliseconds: 300), autoCheckAnswers);
         },
         builder: (context, candidateData, rejectedData) {
-          final droppedAnimal = droppedAnimals[number];
-          final isFilled = droppedAnimal != null;
+          final droppedFruit = droppedFruits[number];
+          final isFilled = droppedFruit != null;
 
           Color borderColor = Colors.black;
           if (lastCheckedStatus == 'correct' && isCorrect) {
@@ -212,7 +212,7 @@ with SingleTickerProviderStateMixin {
               ),
             ),
             child: Center(
-              child: droppedAnimal == null
+              child: droppedFruit == null
                 ? Text(
                   number,
                   style: const TextStyle(
@@ -221,11 +221,11 @@ with SingleTickerProviderStateMixin {
                   ),
                 )
                 : Draggable<String>(
-                  data: droppedAnimal,
+                  data: droppedFruit,
                   feedback: Material(
                     color: Colors.transparent,
                     child: Image.asset(
-                      'assets/images/$droppedAnimal',
+                      'assets/images/$droppedFruit',
                       width: 60,
                       height: 60,
                       fit: BoxFit.contain,
@@ -234,7 +234,7 @@ with SingleTickerProviderStateMixin {
                   childWhenDragging: Opacity(
                     opacity: 0.3,
                     child: Image.asset(
-                      'assets/images/$droppedAnimal',
+                      'assets/images/$droppedFruit',
                       width: 60,
                       height: 60,
                       fit: BoxFit.contain,
@@ -242,25 +242,25 @@ with SingleTickerProviderStateMixin {
                   ),
                   onDragCompleted: () {
                     setState(() {
-                      droppedAnimals[number] = null;
+                      droppedFruits[number] = null;
                     });
                   },
                   child: GestureDetector(
                     onTap: () {
                       setState(() {
-                        final animal = droppedAnimals[number];
-                        if (animal != null) {
-                          if (!availableAnimals.contains(animal)) {
-                            availableAnimals.add(animal);
+                        final fruit = droppedFruits[number];
+                        if (fruit != null) {
+                          if (!availableFruits.contains(fruit)) {
+                            availableFruits.add(fruit);
                           }
-                          droppedAnimals[number] = null;
+                          droppedFruits[number] = null;
                           lastCheckedStatus = null;
                           hasWon = false;
                         }
                       });
                     },
                     child: Image.asset(
-                      'assets/images/$droppedAnimal',
+                      'assets/images/$droppedFruit',
                       width: 60,
                       height: 60,
                       fit: BoxFit.contain,
@@ -274,7 +274,7 @@ with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget dashedAnimal(String assetName) {
+  Widget dashedFruit(String assetName) {
     return Draggable<String>(
       data: assetName,
       feedback: Material(
@@ -318,19 +318,19 @@ with SingleTickerProviderStateMixin {
     );
   }
 
-  Widget buildAnimalRows() {
-    final topRow = availableAnimals.take(3).toList();
-    final bottomRow = availableAnimals.skip(3).toList();
+  Widget buildFruitRows() {
+    final topRow = availableFruits.take(3).toList();
+    final bottomRow = availableFruits.skip(3).toList();
 
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: topRow.map((a) => dashedAnimal(a)).toList(),
+          children: topRow.map((a) => dashedFruit(a)).toList(),
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: bottomRow.map((a) => dashedAnimal(a)).toList(),
+          children: bottomRow.map((a) => dashedFruit(a)).toList(),
         ),
       ],
     );
@@ -396,12 +396,12 @@ with SingleTickerProviderStateMixin {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        animalIcon('snake.png', '1'),
-                        animalIcon('zebra.png', '2'),
-                        animalIcon('cat.png', '3'),
-                        animalIcon('fish.png', '4'),
-                        animalIcon('monkey.png', '5'),
-                        animalIcon('koala.png', '6'),
+                        fruitIcon('apple.png', '1'),
+                        fruitIcon('orange.png', '2'),
+                        fruitIcon('grapes.png', '3'),
+                        fruitIcon('mango.png', '4'),
+                        fruitIcon('bananas.png', '5'),
+                        fruitIcon('watermelon.png', '6'),
                       ],
                     ),
                   ),
@@ -414,11 +414,11 @@ with SingleTickerProviderStateMixin {
                       decoration:BoxDecoration(border: Border.all(color: Colors.black, width: 2)),
                       child: Row(
                         children: [ 
-                          boxedNumber('1'),
+                          boxedNumber('3'),
                           Container(width: 1, height: 100, color: Colors.black),
-                          boxedNumber('4'),
+                          boxedNumber('5'),
                           Container(width: 1, height: 100, color: Colors.black),
-                          boxedNumber('2'),
+                          boxedNumber('6'),
                         ],
                       ),
                     ),
@@ -430,11 +430,11 @@ with SingleTickerProviderStateMixin {
                       decoration: BoxDecoration(border: Border.all(color: Colors.black, width: 2)),
                       child: Row(
                         children: [
-                          boxedNumber('3'),
+                          boxedNumber('1'),
                           Container(width: 1, height: 100, color: Colors.black),
-                          boxedNumber('6'),
+                          boxedNumber('2'),
                           Container(width: 1, height: 100, color: Colors.black),
-                          boxedNumber('5'),
+                          boxedNumber('4'),
                         ],
                       ),
                     ),
@@ -443,7 +443,7 @@ with SingleTickerProviderStateMixin {
                   const Padding(
                     padding: EdgeInsets.all(20),
                     child: Text(
-                      'Cocokkan hewan dengan angka!',
+                      'Cocokkan buah dengan angka!',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -452,7 +452,7 @@ with SingleTickerProviderStateMixin {
                     ),
                   ),
 
-                  buildAnimalRows(),
+                  buildFruitRows(),
 
                   const SizedBox(height: 100),
                 ],
@@ -467,10 +467,10 @@ with SingleTickerProviderStateMixin {
         child: Align(
           alignment: Alignment.bottomRight,
           child: ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => const Level2Screen()),
+                MaterialPageRoute(builder: (context) => const Level4Screen()),
               );
             },
             style: ElevatedButton.styleFrom(

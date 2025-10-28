@@ -35,13 +35,35 @@ flutter:
     - assets/images/logo.png
     - assets/svg/map_vertical.svg
     - assets/drawable/map_vertical.png
+
     - assets/images/snake.png
     - assets/images/zebra.png
     - assets/images/cat.png
     - assets/images/fish.png
-    - assets/images/lion.png
+    - assets/images/monkey.png
     - assets/images/koala.png
     - assets/images/back_icon.png
+
+    - assets/images/bird.png
+    - assets/images/crab.png
+    - assets/images/rabbit.png
+    - assets/images/jellyfish.png
+    - assets/images/ant.png
+    - assets/images/turtle.png
+
+    - assets/images/watermelon.png
+    - assets/images/orange.png
+    - assets/images/apple.png
+    - assets/images/grapes.png
+    - assets/images/bananas.png
+    - assets/images/mango.png
+
+    - assets/images/cherries.png
+    - assets/images/kiwi.png
+    - assets/images/passion_fruit.png
+    - assets/images/pineapple.png
+    - assets/images/pear.png
+    - assets/images/strawberry.png
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

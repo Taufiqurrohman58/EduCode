@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
-import 'level2_screen.dart';
+import 'level3_screen.dart';
 
-class Level1Screen extends StatefulWidget {
-  const Level1Screen({super.key});
+class Level2Screen extends StatefulWidget {
+  const Level2Screen({super.key});
 
   @override
-  State<Level1Screen> createState() => _Level1ScreenState();
+  State<Level2Screen> createState() => _Level2ScreenState();
 }
 
-class _Level1ScreenState extends State<Level1Screen>
+class _Level2ScreenState extends State<Level2Screen>
 with SingleTickerProviderStateMixin {
   final Map<String, String> correctMapping = {
-    'snake.png': '1',
-    'zebra.png': '2',
-    'cat.png': '3',
-    'fish.png': '4',
-    'monkey.png': '5',
-    'koala.png': '6',
+    'rabbit.png': '1',
+    'crap.png': '2',
+    'turtle.png': '3',
+    'jellyfish.png': '4',
+    'ant.png': '5',
+    'bird.png': '6',
   };
 
   Map<String, String?> droppedAnimals = {
@@ -29,12 +29,12 @@ with SingleTickerProviderStateMixin {
   };
 
   List<String> availableAnimals = [
-    'snake.png',
-    'zebra.png',
-    'cat.png',
-    'fish.png',
-    'monkey.png',
-    'koala.png',
+    'rabbit.png',
+    'crab.png',
+    'turtle.png',
+    'jellyfish.png',
+    'ant.png',
+    'bird.png',
   ];
 
   late AnimationController _controller;
@@ -70,12 +70,12 @@ with SingleTickerProviderStateMixin {
         '6': null,
       };
       availableAnimals = [
-        'snake.png',
-        'zebra.png',
-        'cat.png',
-        'fish.png',
-        'monkey.png',
-        'koala.png',
+        'rabbit.png',
+        'crab.png',
+        'turtle.png',
+        'jellyfish.png',
+        'ant.png',
+        'bird.png',
       ];
       lastCheckedStatus = null;
       hasWon = false;
@@ -396,12 +396,12 @@ with SingleTickerProviderStateMixin {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        animalIcon('snake.png', '1'),
-                        animalIcon('zebra.png', '2'),
-                        animalIcon('cat.png', '3'),
-                        animalIcon('fish.png', '4'),
-                        animalIcon('monkey.png', '5'),
-                        animalIcon('koala.png', '6'),
+                        animalIcon('rabbit.png', '1'),
+                        animalIcon('crab.png', '2'),
+                        animalIcon('turtle.png', '3'),
+                        animalIcon('jellyfish.png', '4'),
+                        animalIcon('ant.png', '5'),
+                        animalIcon('bird.png', '6'),
                       ],
                     ),
                   ),
@@ -414,11 +414,11 @@ with SingleTickerProviderStateMixin {
                       decoration:BoxDecoration(border: Border.all(color: Colors.black, width: 2)),
                       child: Row(
                         children: [ 
-                          boxedNumber('1'),
-                          Container(width: 1, height: 100, color: Colors.black),
-                          boxedNumber('4'),
+                          boxedNumber('6'),
                           Container(width: 1, height: 100, color: Colors.black),
                           boxedNumber('2'),
+                          Container(width: 1, height: 100, color: Colors.black),
+                          boxedNumber('1'),
                         ],
                       ),
                     ),
@@ -430,11 +430,11 @@ with SingleTickerProviderStateMixin {
                       decoration: BoxDecoration(border: Border.all(color: Colors.black, width: 2)),
                       child: Row(
                         children: [
-                          boxedNumber('3'),
-                          Container(width: 1, height: 100, color: Colors.black),
-                          boxedNumber('6'),
+                          boxedNumber('4'),
                           Container(width: 1, height: 100, color: Colors.black),
                           boxedNumber('5'),
+                          Container(width: 1, height: 100, color: Colors.black),
+                          boxedNumber('3'),
                         ],
                       ),
                     ),
@@ -470,7 +470,7 @@ with SingleTickerProviderStateMixin {
             onPressed: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => const Level2Screen()),
+                MaterialPageRoute(builder: (context) => const Level3Screen()),
               );
             },
             style: ElevatedButton.styleFrom(
