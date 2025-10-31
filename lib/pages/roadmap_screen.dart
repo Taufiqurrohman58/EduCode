@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:game_levels_scrolling_map/game_levels_scrolling_map.dart';
 import 'package:game_levels_scrolling_map/model/point_model.dart';
-import 'db/db_helper.dart';
+import 'db/db_hive.dart';
 
 import 'levels/level1_screen.dart';
 import 'levels/level2_screen.dart';
@@ -50,8 +50,8 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
             }
           },
           child: Container(
-            width: 45,
-            height: 45,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: isUnlocked ? Colors.purpleAccent : Colors.grey.shade700,
               shape: BoxShape.circle,
@@ -66,7 +66,7 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   )
-                : const Icon(Icons.lock, color: Colors.white, size: 20),
+                : const Icon(Icons.lock, color: Colors.white, size: 18),
           ),
         ),
       );

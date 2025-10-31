@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'dart:math' as math;
+import './services/sound_manager.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,21 +11,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late AudioPlayer _player;
+  final _audioManager = AudioManager();
 
   @override
   void initState() {
     super.initState();
-    _player = AudioPlayer();
-    _player.setReleaseMode(ReleaseMode.loop);
-    _player.play(AssetSource("sounds/bg_music.mp3"));
-  }
-
-  @override
-  void dispose() {
-    _player.stop();
-    _player.dispose();
-    super.dispose();
+      _audioManager.playBackgroundMusic();
   }
 
   @override

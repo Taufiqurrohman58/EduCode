@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/sound_manager.dart';
 
 class Level4Screen extends StatefulWidget {
   const Level4Screen({super.key});
@@ -367,7 +368,7 @@ with SingleTickerProviderStateMixin {
                         child: Align(
                           alignment: Alignment.centerLeft,
                           child: Padding(
-                            padding: const EdgeInsets.only(left: 8),
+                            padding: const EdgeInsets.only(left: 18),
                             child: GestureDetector(
                               onTap: () => Navigator.pop(context),
                               child: Container(
@@ -382,6 +383,35 @@ with SingleTickerProviderStateMixin {
                                   fit: BoxFit.contain,
                                 ),
                               ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      Positioned.fill(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 18),
+                            child: GestureDetector(
+                              onTap: () async {
+                                AudioManager().playVoice('sounds/level_3&4.mp3');
+                              },
+                              child: Container(
+                                width: 30,
+                                height: 30,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Transform.scale(
+                                  scale: 1.2,
+                                  child: Image.asset(
+                                    "assets/images/volume.png",
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
+
                             ),
                           ),
                         ),

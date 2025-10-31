@@ -4,7 +4,7 @@ import 'pages/splash_screen.dart';
 import 'pages/home_screen.dart';
 import 'pages/roadmap_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'pages/db/db_helper.dart';
+import 'pages/db/db_hive.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
