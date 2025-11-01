@@ -1,6 +1,6 @@
 import 'package:hive/hive.dart';
 
-class DBHelper {
+class DBHive {
   static late Box _box;
 
   // Inisialisasi Hive box

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'level2_screen.dart';
 import '../services/sound_manager.dart';
 import 'package:lottie/lottie.dart';
 import '../db/db_hive.dart';
@@ -12,7 +11,7 @@ class Level1Screen extends StatefulWidget {
 }
 
 class _Level1ScreenState extends State<Level1Screen>
-with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   final Map<String, String> correctMapping = {
     'snake.png': '1',
     'zebra.png': '2',
@@ -65,8 +64,8 @@ with SingleTickerProviderStateMixin {
 
   bool get allDropped => !droppedAnimals.values.contains(null);
 
-  void restartLevel(){
-    setState((){
+  void restartLevel() {
+    setState(() {
       droppedAnimals = {
         '1': null,
         '2': null,
@@ -135,11 +134,11 @@ with SingleTickerProviderStateMixin {
     }
   }
 
-  void _nextLevel() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const Level2Screen()),
+  void _nextLevel(){
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Level 2 berhasil terbuka!')),
     );
+    Navigator.pop(context);
   }
 
   Widget animalIcon(String assetName, String label) {
@@ -152,10 +151,7 @@ with SingleTickerProviderStateMixin {
           child: Image.asset('assets/images/$assetName', fit: BoxFit.contain),
         ),
         const SizedBox(height: 6),
-        Text(
-          label, 
-          style: const TextStyle(fontSize: 16)
-        ),
+        Text(label, style: const TextStyle(fontSize: 16)),
       ],
     );
   }
@@ -467,17 +463,16 @@ with SingleTickerProviderStateMixin {
                   const SizedBox(height: 100),
                 ],
               ),
-
             ),
             if (showWin && winAnimasi != null)
-            Center(
-              child: Lottie.asset(
-                winAnimasi!,
-                width: 250,
-                height: 250,
-                repeat: false,
+              Center(
+                child: Lottie.asset(
+                  winAnimasi!,
+                  width: 250,
+                  height: 250,
+                  repeat: false,
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -488,9 +483,11 @@ with SingleTickerProviderStateMixin {
                 alignment: Alignment.bottomRight,
                 child: ElevatedButton(
                   onPressed: () async {
-                    await DBHelper.unlockNextLevel(1);
+                    await DBHive.unlockNextLevel(1);
 
                     _nextLevel();
+
+                    // _backPage();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.purpleAccent,

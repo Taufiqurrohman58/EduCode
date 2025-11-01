@@ -27,7 +27,7 @@ class _RoadmapScreenState extends State<RoadmapScreen> {
 
   void _loadProgress() {
     setState(() {
-      unlockedLevel = DBHelper.getUnlockedLevel();
+      unlockedLevel = DBHive.getUnlockedLevel();
       _generatePoints();
     });
   }

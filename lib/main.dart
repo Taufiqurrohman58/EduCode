@@ -15,7 +15,7 @@ void main() async {
   ]);
 
   await Hive.initFlutter();
-  await DBHelper.init();
+  await DBHive.init();
 
   runApp(const MyApp());
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'level3_screen.dart';
 import '../services/sound_manager.dart';
 import 'package:lottie/lottie.dart';
 import '../db/db_hive.dart';
@@ -12,7 +11,7 @@ class Level2Screen extends StatefulWidget {
 }
 
 class _Level2ScreenState extends State<Level2Screen>
-with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
   final Map<String, String> correctMapping = {
     'rabbit.png': '1',
     'crab.png': '2',
@@ -65,8 +64,8 @@ with SingleTickerProviderStateMixin {
 
   bool get allDropped => !droppedAnimals.values.contains(null);
 
-  void restartLevel(){
-    setState((){
+  void restartLevel() {
+    setState(() {
       droppedAnimals = {
         '1': null,
         '2': null,
@@ -114,7 +113,7 @@ with SingleTickerProviderStateMixin {
     bool allCorrect = true;
     for (var entry in droppedAnimals.entries) {
       final animal = entry.value;
-      if (animal == null || correctMapping[animal] != entry.key){
+      if (animal == null || correctMapping[animal] != entry.key) {
         allCorrect = false;
         break;
       }
@@ -136,10 +135,10 @@ with SingleTickerProviderStateMixin {
   }
 
   void _nextLevel() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const Level3Screen()),
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Level 3 berhasil terbuka!')),
     );
+    Navigator.pop(context);
   }
 
   Widget animalIcon(String assetName, String label) {
@@ -152,16 +151,14 @@ with SingleTickerProviderStateMixin {
           child: Image.asset('assets/images/$assetName', fit: BoxFit.contain),
         ),
         const SizedBox(height: 6),
-        Text(
-          label, 
-          style: const TextStyle(fontSize: 16)
-        ),
+        Text(label, style: const TextStyle(fontSize: 16)),
       ],
     );
   }
 
   Widget boxedNumber(String number) {
-    final isCorrect = droppedAnimals[number] != null && correctMapping[droppedAnimals[number]] == number;
+    final isCorrect = droppedAnimals[number] != null &&
+        correctMapping[droppedAnimals[number]] == number;
     return Expanded(
       child: DragTarget<String>(
         onAcceptWithDetails: (details) {
@@ -198,67 +195,62 @@ with SingleTickerProviderStateMixin {
             height: 100,
             decoration: BoxDecoration(
               color: Colors.white,
-              border: Border.all(
-                color: borderColor, 
-                width: 2
-              ),
+              border: Border.all(color: borderColor, width: 2),
             ),
             child: Center(
               child: droppedAnimal == null
-                ? Text(
-                  number,
-                  style: const TextStyle(
-                    fontSize: 48, 
-                    fontWeight: FontWeight.w600
-                  ),
-                )
-                : Draggable<String>(
-                  data: droppedAnimal,
-                  feedback: Material(
-                    color: Colors.transparent,
-                    child: Image.asset(
-                      'assets/images/$droppedAnimal',
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                  childWhenDragging: Opacity(
-                    opacity: 0.3,
-                    child: Image.asset(
-                      'assets/images/$droppedAnimal',
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                  onDragCompleted: () {
-                    setState(() {
-                      droppedAnimals[number] = null;
-                    });
-                  },
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        final animal = droppedAnimals[number];
-                        if (animal != null) {
-                          if (!availableAnimals.contains(animal)) {
-                            availableAnimals.add(animal);
-                          }
+                  ? Text(
+                      number,
+                      style: const TextStyle(
+                          fontSize: 48, fontWeight: FontWeight.w600),
+                    )
+                  : Draggable<String>(
+                      data: droppedAnimal,
+                      feedback: Material(
+                        color: Colors.transparent,
+                        child: Image.asset(
+                          'assets/images/$droppedAnimal',
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      childWhenDragging: Opacity(
+                        opacity: 0.3,
+                        child: Image.asset(
+                          'assets/images/$droppedAnimal',
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      onDragCompleted: () {
+                        setState(() {
                           droppedAnimals[number] = null;
-                          lastCheckedStatus = null;
-                          hasWon = false;
-                        }
-                      });
-                    },
-                    child: Image.asset(
-                      'assets/images/$droppedAnimal',
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.contain,
+                        });
+                      },
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            final animal = droppedAnimals[number];
+                            if (animal != null) {
+                              if (!availableAnimals.contains(animal)) {
+                                availableAnimals.add(animal);
+                              }
+                              droppedAnimals[number] = null;
+                              lastCheckedStatus = null;
+                              hasWon = false;
+                            }
+                          });
+                        },
+                        child: Image.asset(
+                          'assets/images/$droppedAnimal',
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
             ),
           );
         },
@@ -292,10 +284,7 @@ with SingleTickerProviderStateMixin {
         height: 90,
         margin: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          border: Border.all(
-            color: Colors.grey, 
-            width: 1.5
-          ),
+          border: Border.all(color: Colors.grey, width: 1.5),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Center(
@@ -385,7 +374,8 @@ with SingleTickerProviderStateMixin {
                             padding: const EdgeInsets.only(right: 18),
                             child: GestureDetector(
                               onTap: () async {
-                                AudioManager().playVoice('sounds/level_1&2.mp3');
+                                AudioManager()
+                                    .playVoice('sounds/level_1&2.mp3');
                               },
                               child: Container(
                                 width: 30,
@@ -408,9 +398,7 @@ with SingleTickerProviderStateMixin {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 18),
-
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 18.0),
                     child: Row(
@@ -425,15 +413,14 @@ with SingleTickerProviderStateMixin {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 18),
-
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 28.0),
                     child: Container(
-                      decoration:BoxDecoration(border: Border.all(color: Colors.black, width: 2)),
+                      decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black, width: 2)),
                       child: Row(
-                        children: [ 
+                        children: [
                           boxedNumber('6'),
                           Container(width: 1, height: 100, color: Colors.black),
                           boxedNumber('2'),
@@ -447,7 +434,8 @@ with SingleTickerProviderStateMixin {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 28.0),
                     child: Container(
-                      decoration: BoxDecoration(border: Border.all(color: Colors.black, width: 2)),
+                      decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black, width: 2)),
                       child: Row(
                         children: [
                           boxedNumber('4'),
@@ -471,63 +459,60 @@ with SingleTickerProviderStateMixin {
                       ),
                     ),
                   ),
-
                   buildAnimalRows(),
-
                   const SizedBox(height: 100),
                 ],
               ),
             ),
             if (showWin && winAnimasi != null)
-            Center(
-              child: Lottie.asset(
-                winAnimasi!,
-                width: 250,
-                height: 250,
-                repeat: false,
+              Center(
+                child: Lottie.asset(
+                  winAnimasi!,
+                  width: 250,
+                  height: 250,
+                  repeat: false,
+                ),
               ),
-            ),
           ],
         ),
       ),
       floatingActionButton: hasWon
-      ? Padding(
-        padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
-        child: Align(
-          alignment: Alignment.bottomRight,
-          child: ElevatedButton(
-            onPressed: () async {
-              await DBHelper.unlockNextLevel(1);
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
+              child: Align(
+                alignment: Alignment.bottomRight,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    await DBHive.unlockNextLevel(2);
 
-              _nextLevel();
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.purpleAccent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-                side: const BorderSide(
-                  color: Colors.purple,
-                  width: 3,
+                    // _backPage();
+                    _nextLevel();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purpleAccent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      side: const BorderSide(
+                        color: Colors.purple,
+                        width: 3,
+                      ),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    elevation: 6,
+                  ),
+                  child: Text(
+                    "Lanjut",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20, 
-                vertical: 12
-              ),
-              elevation: 6,
-            ),
-            child: Text(
-              "Lanjut",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ),
-      )
-      : null,
+            )
+          : null,
     );
   }
 }
