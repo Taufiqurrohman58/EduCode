@@ -32,8 +32,11 @@ flutter:
     - assets/sounds/bg_music.mp3
     - assets/sounds/level_1&2.mp3
     - assets/sounds/level_3&4.mp3
+    - assets/sounds/benar.mp3
+    - assets/sounds/salah.mp3
     
     - assets/lottie/cat.json
+    - assets/lottie/benar.json
     - assets/images/title.png
     - assets/images/logo.png
     - assets/svg/map_vertical.svg

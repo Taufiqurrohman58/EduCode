@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'level2_screen.dart';
 import '../services/sound_manager.dart';
+import 'package:lottie/lottie.dart';
 
 class Level1Screen extends StatefulWidget {
   const Level1Screen({super.key});
@@ -43,6 +44,9 @@ with SingleTickerProviderStateMixin {
   String? lastCheckedStatus;
   bool hasWon = false;
 
+  bool showWin = false;
+  String? winAnimasi;
+
   @override
   void initState() {
     super.initState();
@@ -84,44 +88,23 @@ with SingleTickerProviderStateMixin {
   }
 
   Future<void> showResultDialog(bool isCorrect) async {
-    await showDialog(
-      context: context,
-      builder: (context){
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Row(
-            children: [
-              Icon(
-                isCorrect ? Icons.emoji_emotions : Icons.sentiment_dissatisfied,
-                color: isCorrect ? Colors.green : Colors.red,
-                size: 36,
-              ),
-              const SizedBox(width: 10),
-              Text(
-                isCorrect ? "Selamat!" : "Yahh Salah",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: isCorrect ? Colors.green : Colors.red,
-                ),
-              ),
-            ],
-          ),
-          content: Text(
-            isCorrect
-            ? "Kamu berhasil mencocokkan semua dengan benar! "
-            : "Jawabanmu masih salah, coba lagi ya!",
-            style: const TextStyle(fontSize: 16),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(isCorrect ? "Oke" : "Ulangi",
-              style: const TextStyle(fontSize: 16)),
-            ),
-          ],
-        );
-      },
-    );
+    if (isCorrect) {
+      setState(() {
+        showWin = true;
+        winAnimasi = 'assets/lottie/benar.json';
+      });
+
+      await AudioManager().playEffect('sounds/benar.mp3');
+      await Future.delayed(const Duration(seconds: 3));
+
+      setState(() {
+        showWin = false;
+      });
+    } else {
+      await AudioManager().playEffect('sounds/salah.mp3');
+      await Future.delayed(const Duration(seconds: 2));
+      restartLevel();
+    }
   }
 
   void autoCheckAnswers() async {
@@ -130,7 +113,7 @@ with SingleTickerProviderStateMixin {
     bool allCorrect = true;
     for (var entry in droppedAnimals.entries) {
       final animal = entry.value;
-      if (animal == null || correctMapping[animal] != entry.key){
+      if (animal == null || correctMapping[animal] != entry.key) {
         allCorrect = false;
         break;
       }
@@ -170,7 +153,8 @@ with SingleTickerProviderStateMixin {
   }
 
   Widget boxedNumber(String number) {
-    final isCorrect = droppedAnimals[number] != null && correctMapping[droppedAnimals[number]] == number;
+    final isCorrect = droppedAnimals[number] != null &&
+        correctMapping[droppedAnimals[number]] == number;
     return Expanded(
       child: DragTarget<String>(
         onAcceptWithDetails: (details) {
@@ -207,67 +191,62 @@ with SingleTickerProviderStateMixin {
             height: 100,
             decoration: BoxDecoration(
               color: Colors.white,
-              border: Border.all(
-                color: borderColor, 
-                width: 2
-              ),
+              border: Border.all(color: borderColor, width: 2),
             ),
             child: Center(
               child: droppedAnimal == null
-                ? Text(
-                  number,
-                  style: const TextStyle(
-                    fontSize: 48, 
-                    fontWeight: FontWeight.w600
-                  ),
-                )
-                : Draggable<String>(
-                  data: droppedAnimal,
-                  feedback: Material(
-                    color: Colors.transparent,
-                    child: Image.asset(
-                      'assets/images/$droppedAnimal',
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                  childWhenDragging: Opacity(
-                    opacity: 0.3,
-                    child: Image.asset(
-                      'assets/images/$droppedAnimal',
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                  onDragCompleted: () {
-                    setState(() {
-                      droppedAnimals[number] = null;
-                    });
-                  },
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        final animal = droppedAnimals[number];
-                        if (animal != null) {
-                          if (!availableAnimals.contains(animal)) {
-                            availableAnimals.add(animal);
-                          }
+                  ? Text(
+                      number,
+                      style: const TextStyle(
+                          fontSize: 48, fontWeight: FontWeight.w600),
+                    )
+                  : Draggable<String>(
+                      data: droppedAnimal,
+                      feedback: Material(
+                        color: Colors.transparent,
+                        child: Image.asset(
+                          'assets/images/$droppedAnimal',
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      childWhenDragging: Opacity(
+                        opacity: 0.3,
+                        child: Image.asset(
+                          'assets/images/$droppedAnimal',
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      onDragCompleted: () {
+                        setState(() {
                           droppedAnimals[number] = null;
-                          lastCheckedStatus = null;
-                          hasWon = false;
-                        }
-                      });
-                    },
-                    child: Image.asset(
-                      'assets/images/$droppedAnimal',
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.contain,
+                        });
+                      },
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            final animal = droppedAnimals[number];
+                            if (animal != null) {
+                              if (!availableAnimals.contains(animal)) {
+                                availableAnimals.add(animal);
+                              }
+                              droppedAnimals[number] = null;
+                              lastCheckedStatus = null;
+                              hasWon = false;
+                            }
+                          });
+                        },
+                        child: Image.asset(
+                          'assets/images/$droppedAnimal',
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
             ),
           );
         },
@@ -301,10 +280,7 @@ with SingleTickerProviderStateMixin {
         height: 90,
         margin: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          border: Border.all(
-            color: Colors.grey, 
-            width: 1.5
-          ),
+          border: Border.all(color: Colors.grey, width: 1.5),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Center(
@@ -394,7 +370,8 @@ with SingleTickerProviderStateMixin {
                             padding: const EdgeInsets.only(right: 18),
                             child: GestureDetector(
                               onTap: () async {
-                                AudioManager().playVoice('sounds/level_1&2.mp3');
+                                AudioManager()
+                                    .playVoice('sounds/level_1&2.mp3');
                               },
                               child: Container(
                                 width: 30,
@@ -411,16 +388,13 @@ with SingleTickerProviderStateMixin {
                                   ),
                                 ),
                               ),
-
                             ),
                           ),
                         ),
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 18),
-
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 18.0),
                     child: Row(
@@ -435,15 +409,14 @@ with SingleTickerProviderStateMixin {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 18),
-
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 28.0),
                     child: Container(
-                      decoration:BoxDecoration(border: Border.all(color: Colors.black, width: 2)),
+                      decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black, width: 2)),
                       child: Row(
-                        children: [ 
+                        children: [
                           boxedNumber('1'),
                           Container(width: 1, height: 100, color: Colors.black),
                           boxedNumber('4'),
@@ -457,7 +430,8 @@ with SingleTickerProviderStateMixin {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 28.0),
                     child: Container(
-                      decoration: BoxDecoration(border: Border.all(color: Colors.black, width: 2)),
+                      decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black, width: 2)),
                       child: Row(
                         children: [
                           boxedNumber('3'),
@@ -481,55 +455,62 @@ with SingleTickerProviderStateMixin {
                       ),
                     ),
                   ),
-
                   buildAnimalRows(),
-
                   const SizedBox(height: 100),
                 ],
+              ),
+
+            ),
+            if (showWin && winAnimasi != null)
+            Center(
+              child: Lottie.asset(
+                winAnimasi!,
+                width: 250,
+                height: 250,
+                repeat: false,
               ),
             ),
           ],
         ),
       ),
       floatingActionButton: hasWon
-      ? Padding(
-        padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
-        child: Align(
-          alignment: Alignment.bottomRight,
-          child: ElevatedButton(
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const Level2Screen()),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.purpleAccent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-                side: const BorderSide(
-                  color: Colors.purple,
-                  width: 3,
+          ? Padding(
+              padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
+              child: Align(
+                alignment: Alignment.bottomRight,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const Level2Screen()),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purpleAccent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(15),
+                      side: const BorderSide(
+                        color: Colors.purple,
+                        width: 3,
+                      ),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    elevation: 6,
+                  ),
+                  child: Text(
+                    "Lanjut",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20, 
-                vertical: 12
-              ),
-              elevation: 6,
-            ),
-            child: Text(
-              "Lanjut",
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ),
-        ),
-      )
-      : null,
+            )
+          : null,
     );
   }
 }

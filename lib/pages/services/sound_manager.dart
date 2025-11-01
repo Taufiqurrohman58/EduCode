@@ -47,4 +47,28 @@ class AudioManager {
     await player.setPlayerMode(PlayerMode.lowLatency);
     await player.play(AssetSource(assetPath));
   }
+
+  //suara effect
+    Future<void> playEffect(String assetPath) async {
+    final player = AudioPlayer();
+
+    await player.setAudioContext(
+      AudioContext(
+        android: AudioContextAndroid(
+          isSpeakerphoneOn: false,
+          stayAwake: false,
+          contentType: AndroidContentType.sonification,
+          usageType: AndroidUsageType.game,
+          audioFocus: AndroidAudioFocus.none,
+        ),
+        iOS: AudioContextIOS(
+          category: AVAudioSessionCategory.playback,
+          options: {AVAudioSessionOptions.mixWithOthers},
+        ),
+      ),
+    );
+
+    await player.setPlayerMode(PlayerMode.lowLatency);
+    await player.play(AssetSource(assetPath));
+  }
 }

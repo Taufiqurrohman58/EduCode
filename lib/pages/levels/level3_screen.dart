@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'level4_screen.dart';
 import '../services/sound_manager.dart';
+import 'package:lottie/lottie.dart';
 
 class Level3Screen extends StatefulWidget {
   const Level3Screen({super.key});
@@ -42,6 +43,8 @@ with SingleTickerProviderStateMixin {
 
   String? lastCheckedStatus;
   bool hasWon = false;
+  bool showWin = false;
+  String? winAnimasi;
 
   @override
   void initState() {
@@ -84,44 +87,23 @@ with SingleTickerProviderStateMixin {
   }
 
   Future<void> showResultDialog(bool isCorrect) async {
-    await showDialog(
-      context: context,
-      builder: (context){
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Row(
-            children: [
-              Icon(
-                isCorrect ? Icons.emoji_emotions : Icons.sentiment_dissatisfied,
-                color: isCorrect ? Colors.green : Colors.red,
-                size: 36,
-              ),
-              const SizedBox(width: 10),
-              Text(
-                isCorrect ? "Selamat!" : "Yahh Salah",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: isCorrect ? Colors.green : Colors.red,
-                ),
-              ),
-            ],
-          ),
-          content: Text(
-            isCorrect
-            ? "Kamu berhasil mencocokkan semua dengan benar! "
-            : "Jawabanmu masih salah, coba lagi ya!",
-            style: const TextStyle(fontSize: 16),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(isCorrect ? "Oke" : "Ulangi",
-              style: const TextStyle(fontSize: 16)),
-            ),
-          ],
-        );
-      },
-    );
+    if (isCorrect) {
+      setState(() {
+        showWin = true;
+        winAnimasi = 'assets/lottie/benar.json';
+      });
+
+      await AudioManager().playEffect('sounds/benar.mp3');
+      await Future.delayed(const Duration(seconds: 3));
+
+      setState(() {
+        showWin = false;
+      });
+    } else {
+      await AudioManager().playEffect('sounds/salah.mp3');
+      await Future.delayed(const Duration(seconds: 2));
+      restartLevel();
+    }
   }
 
   void autoCheckAnswers() async {
@@ -486,6 +468,15 @@ with SingleTickerProviderStateMixin {
 
                   const SizedBox(height: 100),
                 ],
+              ),
+            ),
+            if (showWin && winAnimasi != null)
+            Center(
+              child: Lottie.asset(
+                winAnimasi!,
+                width: 250,
+                height: 250,
+                repeat: false,
               ),
             ),
           ],
