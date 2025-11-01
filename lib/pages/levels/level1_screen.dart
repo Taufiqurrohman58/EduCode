@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'level2_screen.dart';
 import '../services/sound_manager.dart';
 import 'package:lottie/lottie.dart';
+import '../db/db_hive.dart';
 
 class Level1Screen extends StatefulWidget {
   const Level1Screen({super.key});
@@ -132,6 +133,13 @@ with SingleTickerProviderStateMixin {
       await showResultDialog(false);
       restartLevel();
     }
+  }
+
+  void _nextLevel() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const Level2Screen()),
+    );
   }
 
   Widget animalIcon(String assetName, String label) {
@@ -479,12 +487,10 @@ with SingleTickerProviderStateMixin {
               child: Align(
                 alignment: Alignment.bottomRight,
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const Level2Screen()),
-                    );
+                  onPressed: () async {
+                    await DBHelper.unlockNextLevel(1);
+
+                    _nextLevel();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.purpleAccent,

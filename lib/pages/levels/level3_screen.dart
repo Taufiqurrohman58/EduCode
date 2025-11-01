@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'level4_screen.dart';
 import '../services/sound_manager.dart';
 import 'package:lottie/lottie.dart';
+import '../db/db_hive.dart';
 
 class Level3Screen extends StatefulWidget {
   const Level3Screen({super.key});
@@ -131,6 +132,13 @@ with SingleTickerProviderStateMixin {
       await showResultDialog(false);
       restartLevel();
     }
+  }
+
+  void _nextLevel() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const Level4Screen()),
+    );
   }
 
   Widget fruitIcon(String assetName, String label) {
@@ -489,10 +497,9 @@ with SingleTickerProviderStateMixin {
           alignment: Alignment.bottomRight,
           child: ElevatedButton(
             onPressed: () async {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const Level4Screen()),
-              );
+              await DBHelper.unlockNextLevel(1);
+
+              _nextLevel();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.purpleAccent,

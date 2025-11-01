@@ -27,7 +27,7 @@ class DBHelper {
   }
 
   // Opsional: reset progress
-  static Future<void> resetProgress() async {
-    await _box.put('unlockedLevel', 1);
-  }
+  // static Future<void> resetProgress() async {
+  //   await _box.put('unlockedLevel', 1);
+  // }
 }
