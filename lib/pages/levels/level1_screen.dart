@@ -12,6 +12,14 @@ class Level1Screen extends StatefulWidget {
 
 class _Level1ScreenState extends State<Level1Screen>
     with SingleTickerProviderStateMixin {
+  //responsive
+  double scale = 1;
+  double w(double size) => size * scale;
+  double h(double size) => size * scale;
+  double sp(double size) => size * scale;
+  //end responsive
+
+  //mapping jawaban yang benar
   final Map<String, String> correctMapping = {
     'snake.png': '1',
     'zebra.png': '2',
@@ -21,6 +29,7 @@ class _Level1ScreenState extends State<Level1Screen>
     'koala.png': '6',
   };
 
+  //penyimpanan drop
   Map<String, String?> droppedAnimals = {
     '1': null,
     '2': null,
@@ -30,15 +39,17 @@ class _Level1ScreenState extends State<Level1Screen>
     '6': null,
   };
 
+  //list hewan yang bisa di drag
   List<String> availableAnimals = [
-    'snake.png',
     'zebra.png',
-    'cat.png',
-    'fish.png',
     'monkey.png',
     'koala.png',
+    'cat.png',
+    'fish.png',
+    'snake.png',
   ];
 
+  //Animation Controller
   late AnimationController _controller;
 
   String? lastCheckedStatus;
@@ -64,6 +75,7 @@ class _Level1ScreenState extends State<Level1Screen>
 
   bool get allDropped => !droppedAnimals.values.contains(null);
 
+  //restart level
   void restartLevel() {
     setState(() {
       droppedAnimals = {
@@ -75,18 +87,19 @@ class _Level1ScreenState extends State<Level1Screen>
         '6': null,
       };
       availableAnimals = [
-        'snake.png',
         'zebra.png',
-        'cat.png',
-        'fish.png',
         'monkey.png',
         'koala.png',
+        'cat.png',
+        'fish.png',
+        'snake.png',
       ];
       lastCheckedStatus = null;
       hasWon = false;
     });
   }
 
+  //Animasi & Suara
   Future<void> showResultDialog(bool isCorrect) async {
     if (isCorrect) {
       setState(() {
@@ -107,6 +120,7 @@ class _Level1ScreenState extends State<Level1Screen>
     }
   }
 
+  //Auto Check Jawaban
   void autoCheckAnswers() async {
     if (!allDropped || hasWon) return;
 
@@ -134,31 +148,33 @@ class _Level1ScreenState extends State<Level1Screen>
     }
   }
 
-  void _nextLevel(){
+  void _nextLevel() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Level 2 berhasil terbuka!')),
     );
     Navigator.pop(context);
   }
 
-  Widget animalIcon(String assetName, String label) {
+  Widget animalLabel(String assetName, String label) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          width: 36,
-          height: 36,
+          width: w(36),
+          height: h(36),
           child: Image.asset('assets/images/$assetName', fit: BoxFit.contain),
         ),
-        const SizedBox(height: 6),
-        Text(label, style: const TextStyle(fontSize: 16)),
+        SizedBox(height: h(6)),
+        Text(label,
+            style: TextStyle(
+              fontSize: sp(16),
+            )),
       ],
     );
   }
 
-  Widget boxedNumber(String number) {
-    final isCorrect = droppedAnimals[number] != null &&
-        correctMapping[droppedAnimals[number]] == number;
+  //DragTarget (Kotak Angka)
+  Widget boxedNumber(String number, {bool showRightBorder = false}) {
     return Expanded(
       child: DragTarget<String>(
         onAcceptWithDetails: (details) {
@@ -182,27 +198,29 @@ class _Level1ScreenState extends State<Level1Screen>
         },
         builder: (context, candidateData, rejectedData) {
           final droppedAnimal = droppedAnimals[number];
-          final isFilled = droppedAnimal != null;
 
-          Color borderColor = Colors.black;
-          if (lastCheckedStatus == 'correct' && isCorrect) {
-            borderColor = Colors.green;
-          } else if (lastCheckedStatus == 'wrong' && isFilled) {
-            borderColor = Colors.red;
-          }
+          Color borderColor = Color(0xFF121212);
+
 
           return Container(
-            height: 100,
+            height: h(100),
             decoration: BoxDecoration(
               color: Colors.white,
-              border: Border.all(color: borderColor, width: 2),
+              border: Border(
+                left: BorderSide(color: borderColor, width: w(2)),
+                top: BorderSide(color: borderColor, width: w(2)),
+                bottom: BorderSide(color: borderColor, width: w(2)),
+                right: showRightBorder
+                    ? BorderSide(color: borderColor, width: w(2))
+                    : BorderSide.none,
+              ),
             ),
             child: Center(
               child: droppedAnimal == null
                   ? Text(
                       number,
-                      style: const TextStyle(
-                          fontSize: 48, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                          fontSize: sp(48), fontWeight: FontWeight.w600),
                     )
                   : Draggable<String>(
                       data: droppedAnimal,
@@ -210,8 +228,8 @@ class _Level1ScreenState extends State<Level1Screen>
                         color: Colors.transparent,
                         child: Image.asset(
                           'assets/images/$droppedAnimal',
-                          width: 60,
-                          height: 60,
+                          width: w(60),
+                          height: h(60),
                           fit: BoxFit.contain,
                         ),
                       ),
@@ -219,14 +237,17 @@ class _Level1ScreenState extends State<Level1Screen>
                         opacity: 0.3,
                         child: Image.asset(
                           'assets/images/$droppedAnimal',
-                          width: 60,
-                          height: 60,
+                          width: w(60),
+                          height: h(60),
                           fit: BoxFit.contain,
                         ),
                       ),
-                      onDragCompleted: () {
+                      onDraggableCanceled: (velocity, offset) {
                         setState(() {
-                          droppedAnimals[number] = null;
+                          droppedAnimals.updateAll((key, value) {
+                            if (key == number) return droppedAnimals[number];
+                            return value;
+                          });
                         });
                       },
                       child: GestureDetector(
@@ -245,8 +266,8 @@ class _Level1ScreenState extends State<Level1Screen>
                         },
                         child: Image.asset(
                           'assets/images/$droppedAnimal',
-                          width: 60,
-                          height: 60,
+                          width: w(60),
+                          height: h(60),
                           fit: BoxFit.contain,
                         ),
                       ),
@@ -258,6 +279,7 @@ class _Level1ScreenState extends State<Level1Screen>
     );
   }
 
+  //Draggable (Hewan)
   Widget dashedAnimal(String assetName) {
     return Draggable<String>(
       data: assetName,
@@ -265,8 +287,8 @@ class _Level1ScreenState extends State<Level1Screen>
         color: Colors.transparent,
         child: Image.asset(
           'assets/images/$assetName',
-          width: 70,
-          height: 70,
+          width: w(70),
+          height: h(70),
           fit: BoxFit.contain,
         ),
       ),
@@ -274,25 +296,26 @@ class _Level1ScreenState extends State<Level1Screen>
         opacity: 0.3,
         child: Image.asset(
           'assets/images/$assetName',
-          width: 60,
-          height: 60,
+          width: w(60),
+          height: h(60),
           fit: BoxFit.contain,
         ),
       ),
+      onDraggableCanceled: (velocity, offset) {},
       child: Container(
-        width: 90,
-        height: 90,
-        margin: const EdgeInsets.all(4),
+        width: 90 * scale,
+        height: 90 * scale,
+        margin: EdgeInsets.all(w(4)),
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey, width: 1.5),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(w(8)),
         ),
         child: Center(
           child: Image.asset(
             'assets/images/$assetName',
             fit: BoxFit.contain,
-            width: 60,
-            height: 60,
+            width: w(60),
+            height: h(60),
           ),
         ),
       ),
@@ -319,6 +342,10 @@ class _Level1ScreenState extends State<Level1Screen>
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+
+    // base width 360 (HP kecil)
+    scale = screenWidth / 360;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -331,14 +358,14 @@ class _Level1ScreenState extends State<Level1Screen>
                     children: [
                       Container(
                         width: double.infinity,
-                        height: 66,
+                        height: h(66),
                         color: const Color(0xFF45B56B),
                         alignment: Alignment.center,
-                        child: const Text(
+                        child: Text(
                           'ENCODE & DECODE',
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 18,
+                            fontSize: sp(18),
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.5,
                           ),
@@ -348,12 +375,12 @@ class _Level1ScreenState extends State<Level1Screen>
                         child: Align(
                           alignment: Alignment.centerLeft,
                           child: Padding(
-                            padding: const EdgeInsets.only(left: 18),
+                            padding: EdgeInsets.only(left: w(18)),
                             child: GestureDetector(
                               onTap: () => Navigator.pop(context),
                               child: Container(
-                                width: 30,
-                                height: 30,
+                                width: w(30),
+                                height: h(30),
                                 decoration: const BoxDecoration(
                                   color: Colors.white,
                                   shape: BoxShape.circle,
@@ -371,18 +398,18 @@ class _Level1ScreenState extends State<Level1Screen>
                         child: Align(
                           alignment: Alignment.centerRight,
                           child: Padding(
-                            padding: const EdgeInsets.only(right: 18),
+                            padding: EdgeInsets.only(right: w(18)),
                             child: GestureDetector(
                               onTap: () async {
                                 AudioManager()
                                     .playVoice('sounds/level_1&2.mp3');
                               },
                               child: Container(
-                                width: 30,
-                                height: 30,
+                                width: w(30),
+                                height: h(30),
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(w(8)),
                                 ),
                                 child: Transform.scale(
                                   scale: 1.2,
@@ -398,69 +425,65 @@ class _Level1ScreenState extends State<Level1Screen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: h(18)),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                    padding: EdgeInsets.symmetric(horizontal: w(18)),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        animalIcon('snake.png', '1'),
-                        animalIcon('zebra.png', '2'),
-                        animalIcon('cat.png', '3'),
-                        animalIcon('fish.png', '4'),
-                        animalIcon('monkey.png', '5'),
-                        animalIcon('koala.png', '6'),
+                        animalLabel('snake.png', '1'),
+                        animalLabel('zebra.png', '2'),
+                        animalLabel('cat.png', '3'),
+                        animalLabel('fish.png', '4'),
+                        animalLabel('monkey.png', '5'),
+                        animalLabel('koala.png', '6'),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: h(18)),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28.0),
+                    padding: EdgeInsets.symmetric(horizontal: w(28)),
                     child: Container(
-                      decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black, width: 2)),
-                      child: Row(
-                        children: [
-                          boxedNumber('1'),
-                          Container(width: 1, height: 100, color: Colors.black),
-                          boxedNumber('4'),
-                          Container(width: 1, height: 100, color: Colors.black),
-                          boxedNumber('2'),
-                        ],
-                      ),
-                    ),
+                        decoration: BoxDecoration(
+                            border:
+                                Border.all(color: Color(0xFF121212), width: w(2))),
+                        child: Row(
+                          children: [
+                            boxedNumber('1', showRightBorder: true),
+                            boxedNumber('4', showRightBorder: true),
+                            boxedNumber('2', showRightBorder: true),
+                          ],
+                        )),
                   ),
-                  const SizedBox(height: 18),
+                  SizedBox(height: h(28)),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28.0),
+                    padding: EdgeInsets.symmetric(horizontal: w(28)),
                     child: Container(
-                      decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black, width: 2)),
-                      child: Row(
-                        children: [
-                          boxedNumber('3'),
-                          Container(width: 1, height: 100, color: Colors.black),
-                          boxedNumber('6'),
-                          Container(width: 1, height: 100, color: Colors.black),
-                          boxedNumber('5'),
-                        ],
-                      ),
-                    ),
+                        decoration: BoxDecoration(
+                            border:
+                                Border.all(color: Color(0xFF121212), width: w(2))),
+                        child: Row(
+                          children: [
+                            boxedNumber('3', showRightBorder: true),
+                            boxedNumber('6', showRightBorder: true),
+                            boxedNumber('5', showRightBorder: true),
+                          ],
+                        )),
                   ),
-                  const SizedBox(height: 18),
-                  const Padding(
-                    padding: EdgeInsets.all(20),
+                  SizedBox(height: h(18)),
+                  Padding(
+                    padding: EdgeInsets.all(w(20)),
                     child: Text(
                       'Cocokkan hewan dengan angka!',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: sp(16),
                         fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        color: Color(0xFF121212),
                       ),
                     ),
                   ),
                   buildAnimalRows(),
-                  const SizedBox(height: 100),
+                  SizedBox(height: h(10)),
                 ],
               ),
             ),
@@ -468,8 +491,8 @@ class _Level1ScreenState extends State<Level1Screen>
               Center(
                 child: Lottie.asset(
                   winAnimasi!,
-                  width: 250,
-                  height: 250,
+                  width: w(250),
+                  height: h(250),
                   repeat: false,
                 ),
               ),
@@ -478,7 +501,7 @@ class _Level1ScreenState extends State<Level1Screen>
       ),
       floatingActionButton: hasWon
           ? Padding(
-              padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
+              padding: EdgeInsets.only(bottom: h(16), right: w(16)),
               child: Align(
                 alignment: Alignment.bottomRight,
                 child: ElevatedButton(
@@ -492,20 +515,20 @@ class _Level1ScreenState extends State<Level1Screen>
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.purpleAccent,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(w(15)),
                       side: const BorderSide(
                         color: Colors.purple,
                         width: 3,
                       ),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 12),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: w(20), vertical: h(12)),
                     elevation: 6,
                   ),
                   child: Text(
                     "Lanjut",
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: sp(20),
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),

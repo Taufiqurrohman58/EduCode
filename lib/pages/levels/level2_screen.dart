@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/sound_manager.dart';
 import 'package:lottie/lottie.dart';
 import '../db/db_hive.dart';
+import '../widgets/keyboard_number.dart';
 
 class Level2Screen extends StatefulWidget {
   const Level2Screen({super.key});
@@ -12,44 +13,47 @@ class Level2Screen extends StatefulWidget {
 
 class _Level2ScreenState extends State<Level2Screen>
     with SingleTickerProviderStateMixin {
-  final Map<String, String> correctMapping = {
-    'rabbit.png': '1',
-    'crab.png': '2',
-    'turtle.png': '3',
-    'jellyfish.png': '4',
-    'ant.png': '5',
-    'bird.png': '6',
-  };
+  //responsive
+  double scale = 1;
+  double w(double size) => size * scale;
+  double h(double size) => size * scale;
+  double sp(double size) => size * scale;
+  //end responsive
 
-  Map<String, String?> droppedAnimals = {
-    '1': null,
-    '2': null,
-    '3': null,
-    '4': null,
-    '5': null,
-    '6': null,
-  };
-
-  List<String> availableAnimals = [
-    'rabbit.png',
-    'crab.png',
-    'turtle.png',
-    'jellyfish.png',
-    'ant.png',
-    'bird.png',
+  final List<List<String>> correctAnswers = [
+    ['2', '6', '5', '6'],
+    ['5', '2', '4', '1'],
+    ['3', '4', '2', '6'],
+    ['1', '2', '5', '3'],
+    ['3', '3', '1', '4'],
   ];
 
-  late AnimationController _controller;
+  List<bool> rowCorrect = [false, false, false, false, false];
+
+  final List<List<String>> userInputs =
+      List.generate(5, (_) => List.filled(4, ''));
+
+  int selectedRow = 0;
 
   String? lastCheckedStatus;
   bool hasWon = false;
-
   bool showWin = false;
   String? winAnimasi;
+  late AnimationController _controller;
+
+  void _nextLevel() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Level 2 berhasil terbuka!')),
+    );
+    Navigator.pop(context);
+  }
 
   @override
   void initState() {
     super.initState();
+
+    selectedRow = 0;
+
     _controller = AnimationController(
       duration: const Duration(milliseconds: 400),
       vsync: this,
@@ -62,304 +66,314 @@ class _Level2ScreenState extends State<Level2Screen>
     super.dispose();
   }
 
-  bool get allDropped => !droppedAnimals.values.contains(null);
-
-  void restartLevel() {
-    setState(() {
-      droppedAnimals = {
-        '1': null,
-        '2': null,
-        '3': null,
-        '4': null,
-        '5': null,
-        '6': null,
-      };
-      availableAnimals = [
-        'rabbit.png',
-        'crab.png',
-        'turtle.png',
-        'jellyfish.png',
-        'ant.png',
-        'bird.png',
-      ];
-      lastCheckedStatus = null;
-      hasWon = false;
-    });
-  }
-
   Future<void> showResultDialog(bool isCorrect) async {
-    if (isCorrect) {
-      setState(() {
+    setState(() {
+      lastCheckedStatus = isCorrect ? "correct" : "wrong";
+      if (isCorrect) {
         showWin = true;
         winAnimasi = 'assets/lottie/benar.json';
-      });
+      }
+    });
 
+    if (isCorrect) {
       await AudioManager().playEffect('sounds/benar.mp3');
       await Future.delayed(const Duration(seconds: 3));
-
       setState(() {
         showWin = false;
       });
     } else {
       await AudioManager().playEffect('sounds/salah.mp3');
-      await Future.delayed(const Duration(seconds: 2));
-      restartLevel();
+      await Future.delayed(const Duration(seconds: 1));
     }
   }
 
-  void autoCheckAnswers() async {
-    if (!allDropped || hasWon) return;
-
-    bool allCorrect = true;
-    for (var entry in droppedAnimals.entries) {
-      final animal = entry.value;
-      if (animal == null || correctMapping[animal] != entry.key) {
-        allCorrect = false;
+  Future<void> autoCheckAnswers() async {
+    bool allFilled = true;
+    for (int r = 0; r < 5; r++) {
+      if (userInputs[r].any((e) => e.isEmpty)) {
+        allFilled = false;
         break;
       }
     }
 
-    if (allCorrect) {
-      setState(() {
-        lastCheckedStatus = 'correct';
-        hasWon = true;
-      });
-      _controller.forward(from: 0);
+    if (!allFilled) return;
+
+    bool allRowsCorrect = true;
+
+    for (int r = 0; r < 5; r++) {
+      bool rowOK = true;
+      for (int c = 0; c < 4; c++) {
+        if (userInputs[r][c] != correctAnswers[r][c]) {
+          rowOK = false;
+          allRowsCorrect = false;
+          break;
+        }
+      }
+      rowCorrect[r] = rowOK;
+    }
+
+    setState(() {
+      selectedRow = -1; // ⬅️ tambahkan ini
+    });
+
+    if (allRowsCorrect) {
+      hasWon = true;
       await showResultDialog(true);
+      setState(() {});
     } else {
-      setState(() => lastCheckedStatus = 'wrong');
-      _controller.forward(from: 0);
       await showResultDialog(false);
       restartLevel();
     }
   }
 
-  void _nextLevel() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Level 3 berhasil terbuka!')),
-    );
-    Navigator.pop(context);
+  void restartLevel() {
+    setState(() {
+      for (int r = 0; r < 5; r++) {
+        for (int c = 0; c < 4; c++) {
+          userInputs[r][c] = '';
+        }
+        rowCorrect[r] = false;
+      }
+      lastCheckedStatus = null;
+      hasWon = false;
+      showWin = false;
+      winAnimasi = null;
+      selectedRow = 0;
+    });
   }
 
-  Widget animalIcon(String assetName, String label) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          width: 36,
-          height: 36,
-          child: Image.asset('assets/images/$assetName', fit: BoxFit.contain),
-        ),
-        const SizedBox(height: 6),
-        Text(label, style: const TextStyle(fontSize: 16)),
-      ],
-    );
-  }
+  void handleInput(String key) {
+    setState(() {
+      if (key == '←') {
+        bool removed = false;
+        for (int i = 3; i >= 0; i--) {
+          if (userInputs[selectedRow][i].isNotEmpty) {
+            userInputs[selectedRow][i] = '';
+            removed = true;
+            break;
+          }
+        }
 
-  Widget boxedNumber(String number) {
-    final isCorrect = droppedAnimals[number] != null &&
-        correctMapping[droppedAnimals[number]] == number;
-    return Expanded(
-      child: DragTarget<String>(
-        onAcceptWithDetails: (details) {
-          final animal = details.data;
-          setState(() {
-            if (droppedAnimals[number] != null) {
-              if (!availableAnimals.contains(droppedAnimals[number]!)) {
-                availableAnimals.add(droppedAnimals[number]!);
+        if (!removed) {
+          if (selectedRow > 0) {
+            selectedRow--;
+            for (int i = 3; i >= 0; i--) {
+              if (userInputs[selectedRow][i].isNotEmpty) {
+                userInputs[selectedRow][i] = '';
+                break;
               }
             }
-            droppedAnimals.updateAll((key, value) {
-              if (value == animal) return null;
-              return value;
-            });
-
-            droppedAnimals[number] = animal;
-            availableAnimals.remove(animal);
-          });
-
-          Future.delayed(const Duration(milliseconds: 300), autoCheckAnswers);
-        },
-        builder: (context, candidateData, rejectedData) {
-          final droppedAnimal = droppedAnimals[number];
-          final isFilled = droppedAnimal != null;
-
-          Color borderColor = Colors.black;
-          if (lastCheckedStatus == 'correct' && isCorrect) {
-            borderColor = Colors.green;
-          } else if (lastCheckedStatus == 'wrong' && isFilled) {
-            borderColor = Colors.red;
           }
+        }
+        lastCheckedStatus = null;
+        return;
+      }
 
-          return Container(
-            height: 100,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: borderColor, width: 2),
-            ),
-            child: Center(
-              child: droppedAnimal == null
-                  ? Text(
-                      number,
-                      style: const TextStyle(
-                          fontSize: 48, fontWeight: FontWeight.w600),
-                    )
-                  : Draggable<String>(
-                      data: droppedAnimal,
-                      feedback: Material(
-                        color: Colors.transparent,
-                        child: Image.asset(
-                          'assets/images/$droppedAnimal',
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                      childWhenDragging: Opacity(
-                        opacity: 0.3,
-                        child: Image.asset(
-                          'assets/images/$droppedAnimal',
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                      onDragCompleted: () {
-                        setState(() {
-                          droppedAnimals[number] = null;
-                        });
-                      },
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            final animal = droppedAnimals[number];
-                            if (animal != null) {
-                              if (!availableAnimals.contains(animal)) {
-                                availableAnimals.add(animal);
-                              }
-                              droppedAnimals[number] = null;
-                              lastCheckedStatus = null;
-                              hasWon = false;
-                            }
-                          });
-                        },
-                        child: Image.asset(
-                          'assets/images/$droppedAnimal',
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
+      for (int i = 0; i < 4; i++) {
+        if (userInputs[selectedRow][i].isEmpty) {
+          userInputs[selectedRow][i] = key;
+          bool rowFull = userInputs[selectedRow].every((e) => e.isNotEmpty);
+          if (rowFull) {
+            if (selectedRow < 4) {
+              selectedRow++;
+            } else {}
+          }
+          break;
+        }
+      }
+
+      lastCheckedStatus = null;
+    });
+
+    bool lastRowFull = userInputs[4].every((e) => e.isNotEmpty);
+    if (lastRowFull) {
+      autoCheckAnswers();
+      return;
+    }
+
+    bool allFilled = true;
+    for (int r = 0; r < 5; r++) {
+      if (userInputs[r].any((e) => e.isEmpty)) {
+        allFilled = false;
+        break;
+      }
+    }
+    if (allFilled) {
+      autoCheckAnswers();
+    }
+  }
+
+  Widget carImage(String assetName) {
+    return SizedBox(
+      width: w(35),
+      height: h(35),
+      child: Image.asset('assets/images/$assetName', fit: BoxFit.contain),
+    );
+  }
+
+  Widget emptyBoxRow(int rowIndex) {
+    return Container(
+      width: w(35 * 4),
+      height: w(35),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: _getBorderColor(rowIndex),
+          width: w(1.2),
+        ),
+      ),
+      child: Row(
+        children: List.generate(4, (index) {
+          return Expanded(
+            child: Stack(
+              children: [
+                Center(
+                  child: Text(
+                    userInputs[rowIndex][index],
+                    style: TextStyle(
+                        fontSize: sp(18), fontWeight: FontWeight.bold),
+                  ),
+                ),
+
+                /// GARIS PEMBATAS (biar gak double)
+                if (index != 3)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    child: Container(
+                      width: w(1.2),
+                      color: _getBorderColor(rowIndex),
                     ),
+                  ),
+              ],
             ),
           );
-        },
+        }),
       ),
     );
   }
 
-  Widget dashedAnimal(String assetName) {
-    return Draggable<String>(
-      data: assetName,
-      feedback: Material(
-        color: Colors.transparent,
-        child: Image.asset(
-          'assets/images/$assetName',
-          width: 70,
-          height: 70,
-          fit: BoxFit.contain,
-        ),
-      ),
-      childWhenDragging: Opacity(
-        opacity: 0.3,
-        child: Image.asset(
-          'assets/images/$assetName',
-          width: 60,
-          height: 60,
-          fit: BoxFit.contain,
-        ),
-      ),
-      child: Container(
-        width: 90,
-        height: 90,
-        margin: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey, width: 1.5),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Center(
-          child: Image.asset(
-            'assets/images/$assetName',
-            fit: BoxFit.contain,
-            width: 60,
-            height: 60,
-          ),
+  Color _getBorderColor(int rowIndex) {
+    return selectedRow == rowIndex
+        ? Colors.blue
+        : const Color(0xFF121212);
+  }
+
+  Widget carRow(List<String> carAssets, int rowIndex) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedRow = rowIndex;
+          lastCheckedStatus = null;
+        });
+      },
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: w(16)),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: carAssets
+                  .map((asset) => Padding(
+                        padding: EdgeInsets.only(right: w(8)),
+                        child: carImage(asset),
+                      ))
+                  .toList(),
+            ),
+            emptyBoxRow(rowIndex),
+          ],
         ),
       ),
     );
   }
 
-  Widget buildAnimalRows() {
-    final topRow = availableAnimals.take(3).toList();
-    final bottomRow = availableAnimals.skip(3).toList();
-
+  Widget carLabel(String assetName, String label) {
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: topRow.map((a) => dashedAnimal(a)).toList(),
+        SizedBox(
+          width: w(36),
+          height: w(36),
+          child: Image.asset('assets/images/$assetName', fit: BoxFit.contain),
         ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: bottomRow.map((a) => dashedAnimal(a)).toList(),
-        ),
+        SizedBox(height: h(6)),
+        Text(label, style: TextStyle(fontSize: sp(16))),
       ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+
+    // base width 360
+    scale = screenWidth / 360;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Stack(
           children: [
-            SingleChildScrollView(
-              child: Column(
-                children: [
-                  Stack(
-                    children: [
-                      Container(
-                        width: double.infinity,
-                        height: 66,
-                        color: const Color(0xFF45B56B),
-                        alignment: Alignment.center,
-                        child: const Text(
-                          'ENCODE & DECODE',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.5,
+            Column(
+              children: [
+                Stack(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      height: h(66),
+                      color: const Color(0xFF45B56B),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'ENCODE & DECODE',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: sp(18),
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: EdgeInsets.only(left: w(18)),
+                          child: GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              width: w(30),
+                              height: h(30),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Image.asset(
+                                'assets/images/back_icon.png',
+                                fit: BoxFit.contain,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                      Positioned.fill(
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 18),
-                            child: GestureDetector(
-                              onTap: () => Navigator.pop(context),
-                              child: Container(
-                                width: 30,
-                                height: 30,
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
+                    ),
+                    Positioned.fill(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Padding(
+                          padding: EdgeInsets.only(right: w(18)),
+                          child: GestureDetector(
+                            onTap: () async {
+                              AudioManager().playVoice('sounds/level_1&2.mp3');
+                            },
+                            child: Container(
+                              width: w(30),
+                              height: h(30),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(w(8)),
+                              ),
+                              child: Transform.scale(
+                                scale: 1.2,
                                 child: Image.asset(
-                                  'assets/images/back_icon.png',
+                                  "assets/images/volume.png",
                                   fit: BoxFit.contain,
                                 ),
                               ),
@@ -367,109 +381,82 @@ class _Level2ScreenState extends State<Level2Screen>
                           ),
                         ),
                       ),
-                      Positioned.fill(
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 18),
-                            child: GestureDetector(
-                              onTap: () async {
-                                AudioManager()
-                                    .playVoice('sounds/level_1&2.mp3');
-                              },
-                              child: Container(
-                                width: 30,
-                                height: 30,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Transform.scale(
-                                  scale: 1.2,
-                                  child: Image.asset(
-                                    "assets/images/volume.png",
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: h(18)),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: w(18)),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      carLabel('car_blue.png', '1'),
+                      carLabel('car_green.png', '2'),
+                      carLabel('car_red.png', '3'),
+                      carLabel('car_pink.png', '4'),
+                      carLabel('car_orange.png', '5'),
+                      carLabel('car_purple.png', '6'),
                     ],
                   ),
-                  const SizedBox(height: 18),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 18.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        animalIcon('rabbit.png', '1'),
-                        animalIcon('crab.png', '2'),
-                        animalIcon('turtle.png', '3'),
-                        animalIcon('jellyfish.png', '4'),
-                        animalIcon('ant.png', '5'),
-                        animalIcon('bird.png', '6'),
-                      ],
+                ),
+                SizedBox(height: h(18)),
+                Padding(
+                  padding: EdgeInsets.all(w(20)),
+                  child: Text(
+                    'Kasih angka yang tepat sesuai contoh',
+                    style: TextStyle(
+                      fontSize: sp(16),
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF121212),
                     ),
                   ),
-                  const SizedBox(height: 18),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black, width: 2)),
-                      child: Row(
-                        children: [
-                          boxedNumber('6'),
-                          Container(width: 1, height: 100, color: Colors.black),
-                          boxedNumber('2'),
-                          Container(width: 1, height: 100, color: Colors.black),
-                          boxedNumber('1'),
-                        ],
-                      ),
-                    ),
+                ),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      carRow([
+                        'car_green.png',
+                        'car_purple.png',
+                        'car_orange.png',
+                        'car_purple.png'
+                      ], 0),
+                      carRow([
+                        'car_orange.png',
+                        'car_green.png',
+                        'car_pink.png',
+                        'car_blue.png'
+                      ], 1),
+                      carRow([
+                        'car_red.png',
+                        'car_pink.png',
+                        'car_green.png',
+                        'car_purple.png'
+                      ], 2),
+                      carRow([
+                        'car_blue.png',
+                        'car_green.png',
+                        'car_orange.png',
+                        'car_red.png'
+                      ], 3),
+                      carRow([
+                        'car_red.png',
+                        'car_red.png',
+                        'car_blue.png',
+                        'car_pink.png'
+                      ], 4),
+                    ],
                   ),
-                  const SizedBox(height: 18),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black, width: 2)),
-                      child: Row(
-                        children: [
-                          boxedNumber('4'),
-                          Container(width: 1, height: 100, color: Colors.black),
-                          boxedNumber('5'),
-                          Container(width: 1, height: 100, color: Colors.black),
-                          boxedNumber('3'),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  const Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Text(
-                      'Cocokkan hewan dengan angka!',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                  buildAnimalRows(),
-                  const SizedBox(height: 100),
-                ],
-              ),
+                ),
+                NumberKeyboard(onKeyTap: handleInput),
+              ],
             ),
             if (showWin && winAnimasi != null)
               Center(
                 child: Lottie.asset(
                   winAnimasi!,
-                  width: 250,
-                  height: 250,
+                  width: w(250),
+                  height: h(250),
                   repeat: false,
                 ),
               ),
@@ -478,33 +465,34 @@ class _Level2ScreenState extends State<Level2Screen>
       ),
       floatingActionButton: hasWon
           ? Padding(
-              padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
+              padding: EdgeInsets.only(bottom: h(16), right: w(16)),
               child: Align(
                 alignment: Alignment.bottomRight,
                 child: ElevatedButton(
                   onPressed: () async {
                     await DBHive.unlockNextLevel(2);
 
-                    // _backPage();
                     _nextLevel();
+
+                    // _backPage();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.purpleAccent,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(w(15)),
                       side: const BorderSide(
                         color: Colors.purple,
                         width: 3,
                       ),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 12),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: w(20), vertical: h(12)),
                     elevation: 6,
                   ),
                   child: Text(
                     "Lanjut",
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: sp(20),
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),

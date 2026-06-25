@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/sound_manager.dart';
 import 'package:lottie/lottie.dart';
 import '../db/db_hive.dart';
+import '../widgets/keyboard_number.dart';
 
 class Level3Screen extends StatefulWidget {
   const Level3Screen({super.key});
@@ -12,39 +13,42 @@ class Level3Screen extends StatefulWidget {
 
 class _Level3ScreenState extends State<Level3Screen>
     with SingleTickerProviderStateMixin {
-  final Map<String, String> correctMapping = {
-    'apple.png': '1',
-    'orange.png': '2',
-    'grapes.png': '3',
-    'mango.png': '4',
-    'bananas.png': '5',
-    'watermelon.png': '6',
-  };
+  //responsive
+  double scale = 1;
+  double w(double size) => size * scale;
+  double h(double size) => size * scale;
+  double sp(double size) => size * scale;
+  //end responsive
+  // setiap baris hanya membutuhkan 1 string (maks 2 digit)
+  final List<String> userInputs = List.filled(5, '');
+  List<bool> rowCorrect = [false, false, false, false, false];
 
-  Map<String, String?> droppedFruits = {
-    '1': null,
-    '2': null,
-    '3': null,
-    '4': null,
-    '5': null,
-    '6': null,
-  };
-
-  List<String> availableFruits = [
-    'apple.png',
-    'orange.png',
-    'grapes.png',
-    'mango.png',
-    'bananas.png',
-    'watermelon.png',
-  ];
-
-  late AnimationController _controller;
-
-  String? lastCheckedStatus;
+  String? lastCheckedStatus; // null = belum dicek, "correct" / "wrong"
   bool hasWon = false;
   bool showWin = false;
   String? winAnimasi;
+
+  int activeRow = 0; // baris yang sedang aktif menerima input
+
+  // Mapping angka bola
+  final Map<String, String> correctMapping = {
+    'ball1.png': '1',
+    'ball2.png': '2',
+    'ball3.png': '3',
+    'ball4.png': '4',
+    'ball5.png': '5',
+    'ball6.png': '6',
+  };
+
+  final List<List<String>> questionBalls = [
+    ["ball2.png", "ball3.png", "ball5.png"],
+    ["ball6.png", "ball2.png", "ball4.png"],
+    ["ball2.png", "ball4.png", "ball6.png"],
+    ["ball3.png", "ball6.png", "ball2.png"],
+    ["ball5.png", "ball2.png", "ball4.png"],
+  ];
+
+  late AnimationController _controller;
 
   @override
   void initState() {
@@ -61,304 +65,285 @@ class _Level3ScreenState extends State<Level3Screen>
     super.dispose();
   }
 
-  bool get allDropped => !droppedFruits.values.contains(null);
-
-  void restartLevel() {
-    setState(() {
-      droppedFruits = {
-        '1': null,
-        '2': null,
-        '3': null,
-        '4': null,
-        '5': null,
-        '6': null,
-      };
-      availableFruits = [
-        'apple.png',
-        'orange.png',
-        'grapes.png',
-        'mango.png',
-        'bananas.png',
-        'watermelon.png',
-      ];
-      lastCheckedStatus = null;
-      hasWon = false;
-    });
+  String correctSum(List<String> balls) {
+    int total = 0;
+    for (var b in balls) {
+      total += int.parse(correctMapping[b]!);
+    }
+    return total.toString();
   }
 
   Future<void> showResultDialog(bool isCorrect) async {
-    if (isCorrect) {
-      setState(() {
+    setState(() {
+      lastCheckedStatus = isCorrect ? "correct" : "wrong";
+      if (isCorrect) {
         showWin = true;
         winAnimasi = 'assets/lottie/benar.json';
-      });
+      }
+    });
 
+    if (isCorrect) {
       await AudioManager().playEffect('sounds/benar.mp3');
+      // beri waktu melihat animasi
       await Future.delayed(const Duration(seconds: 3));
-
       setState(() {
         showWin = false;
       });
     } else {
       await AudioManager().playEffect('sounds/salah.mp3');
+      // tunggu sebentar sebelum restart (user mendengar suara salah)
       await Future.delayed(const Duration(seconds: 2));
-      restartLevel();
     }
   }
 
   void autoCheckAnswers() async {
-    if (!allDropped || hasWon) return;
-
-    bool allCorrect = true;
-    for (var entry in droppedFruits.entries) {
-      final fruit = entry.value;
-      if (fruit == null || correctMapping[fruit] != entry.key) {
-        allCorrect = false;
-        break;
-      }
+    // cek semua baris sudah terisi 2 digit
+    for (int r = 0; r < userInputs.length; r++) {
+      if (userInputs[r].length < 2) return;
     }
 
+    bool allCorrect = true;
+
+    for (int r = 0; r < userInputs.length; r++) {
+      String correct = correctSum(questionBalls[r]);
+      bool ok = userInputs[r] == correct;
+      rowCorrect[r] = ok;
+      if (!ok) allCorrect = false;
+    }
+
+    // trigger UI warna (lastCheckedStatus diatur di showResultDialog)
+    setState(() {});
+
     if (allCorrect) {
-      setState(() {
-        lastCheckedStatus = 'correct';
-        hasWon = true;
-      });
-      _controller.forward(from: 0);
+      hasWon = true;
       await showResultDialog(true);
+      setState(() {}); // refresh untuk munculkan FAB
     } else {
-      setState(() => lastCheckedStatus = 'wrong');
-      _controller.forward(from: 0);
       await showResultDialog(false);
+      // restart setelah suara salah + delay di showResultDialog
       restartLevel();
     }
   }
 
-  void _nextLevel(){
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Level 3 berhasil terbuka!')),
-    );
-    Navigator.pop(context);
+  void restartLevel() {
+    setState(() {
+      for (int r = 0; r < userInputs.length; r++) {
+        userInputs[r] = '';
+        rowCorrect[r] = false;
+      }
+      lastCheckedStatus = null;
+      hasWon = false;
+      showWin = false;
+      activeRow = 0;
+    });
   }
 
-  Widget fruitIcon(String assetName, String label) {
+  void handleInput(String key) {
+    setState(() {
+      // BACKSPACE / DELETE
+      if (key == '←') {
+        if (userInputs[activeRow].isNotEmpty) {
+          userInputs[activeRow] = userInputs[activeRow]
+              .substring(0, userInputs[activeRow].length - 1);
+        } else {
+          // jika sudah kosong, pindah ke baris sebelumnya (jika ada) dan hapus terakhirnya
+          if (activeRow > 0) {
+            activeRow--;
+            if (userInputs[activeRow].isNotEmpty) {
+              userInputs[activeRow] = userInputs[activeRow]
+                  .substring(0, userInputs[activeRow].length - 1);
+            }
+          }
+        }
+        return;
+      }
+
+      // hanya terima digit jika panjang < 2
+      if (userInputs[activeRow].length < 2) {
+        // pastikan key adalah digit (keyboard custommu sudah mengirim angka atau '←')
+        userInputs[activeRow] += key;
+        // jika sudah 2 digit otomatis pindah ke baris berikutnya (jika ada)
+        if (userInputs[activeRow].length == 2 &&
+            activeRow < userInputs.length - 1) {
+          activeRow++;
+        }
+      }
+    });
+
+    // pengecekan otomatis hanya ketika semua baris terisi (autoCheckAnswers akan return jika belum)
+    autoCheckAnswers();
+  }
+
+  // UI helpers
+  Widget ball(String name) {
+    return SizedBox(
+      width: w(40),
+      height: h(40),
+      child: Image.asset("assets/images/$name"),
+    );
+  }
+
+  Widget answerBox(int rowIndex) {
+  Color borderColor = Colors.black;
+  double borderWidth = 1.5;
+
+  // hanya tampilkan aktif (biru) kalau BELUM dicek
+  if (lastCheckedStatus == null && rowIndex == activeRow) {
+    borderColor = Colors.blue;
+    borderWidth = 2.5;
+  }
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 160),
+      width: w(70),
+      height: h(45),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: Colors.white, // tetap putih (tidak berubah)
+        border: Border.all(
+          color: borderColor,
+          width: borderWidth,
+        ),
+        borderRadius:
+            BorderRadius.circular(w(6)), // biar lebih bagus (optional)
+      ),
+      child: Text(
+        userInputs[rowIndex],
+        style: TextStyle(
+          fontSize: sp(20),
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget sumRow(List<String> balls, int index) {
+    return GestureDetector(
+      onTap: () {
+        // pilih baris untuk edit manual
+        setState(() {
+          activeRow = index;
+        });
+      },
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: w(26)),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ball(balls[0]),
+            SizedBox(width: w(6)),
+            Text("+", style: TextStyle(fontSize: sp(22))),
+            SizedBox(width: w(6)),
+            ball(balls[1]),
+            SizedBox(width: w(6)),
+            Text("+", style: TextStyle(fontSize: sp(22))),
+            SizedBox(width: w(6)),
+            ball(balls[2]),
+            SizedBox(width: w(14)),
+            Text("=", style: TextStyle(fontSize: sp(22))),
+            SizedBox(width: w(14)),
+            answerBox(index),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget ballLabel(String assetName, String label) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
-          width: 36,
-          height: 36,
+          width: w(36),
+          height: h(36),
           child: Image.asset('assets/images/$assetName', fit: BoxFit.contain),
         ),
-        const SizedBox(height: 6),
-        Text(label, style: const TextStyle(fontSize: 16)),
+        SizedBox(height: h(6)),
+        Text(label, style: TextStyle(fontSize: sp(16))),
       ],
     );
   }
 
-  Widget boxedNumber(String number) {
-    final isCorrect = droppedFruits[number] != null &&
-        correctMapping[droppedFruits[number]] == number;
-    return Expanded(
-      child: DragTarget<String>(
-        onAcceptWithDetails: (details) {
-          final fruit = details.data;
-          setState(() {
-            if (droppedFruits[number] != null) {
-              if (!availableFruits.contains(droppedFruits[number]!)) {
-                availableFruits.add(droppedFruits[number]!);
-              }
-            }
-            droppedFruits.updateAll((key, value) {
-              if (value == fruit) return null;
-              return value;
-            });
-
-            droppedFruits[number] = fruit;
-            availableFruits.remove(fruit);
-          });
-
-          Future.delayed(const Duration(milliseconds: 300), autoCheckAnswers);
-        },
-        builder: (context, candidateData, rejectedData) {
-          final droppedFruit = droppedFruits[number];
-          final isFilled = droppedFruit != null;
-
-          Color borderColor = Colors.black;
-          if (lastCheckedStatus == 'correct' && isCorrect) {
-            borderColor = Colors.green;
-          } else if (lastCheckedStatus == 'wrong' && isFilled) {
-            borderColor = Colors.red;
-          }
-
-          return Container(
-            height: 100,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border.all(color: borderColor, width: 2),
-            ),
-            child: Center(
-              child: droppedFruit == null
-                  ? Text(
-                      number,
-                      style: const TextStyle(
-                          fontSize: 48, fontWeight: FontWeight.w600),
-                    )
-                  : Draggable<String>(
-                      data: droppedFruit,
-                      feedback: Material(
-                        color: Colors.transparent,
-                        child: Image.asset(
-                          'assets/images/$droppedFruit',
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                      childWhenDragging: Opacity(
-                        opacity: 0.3,
-                        child: Image.asset(
-                          'assets/images/$droppedFruit',
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                      onDragCompleted: () {
-                        setState(() {
-                          droppedFruits[number] = null;
-                        });
-                      },
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            final fruit = droppedFruits[number];
-                            if (fruit != null) {
-                              if (!availableFruits.contains(fruit)) {
-                                availableFruits.add(fruit);
-                              }
-                              droppedFruits[number] = null;
-                              lastCheckedStatus = null;
-                              hasWon = false;
-                            }
-                          });
-                        },
-                        child: Image.asset(
-                          'assets/images/$droppedFruit',
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    ),
-            ),
-          );
-        },
-      ),
+  void _nextLevel() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Level 2 berhasil terbuka!')),
     );
-  }
-
-  Widget dashedFruit(String assetName) {
-    return Draggable<String>(
-      data: assetName,
-      feedback: Material(
-        color: Colors.transparent,
-        child: Image.asset(
-          'assets/images/$assetName',
-          width: 70,
-          height: 70,
-          fit: BoxFit.contain,
-        ),
-      ),
-      childWhenDragging: Opacity(
-        opacity: 0.3,
-        child: Image.asset(
-          'assets/images/$assetName',
-          width: 60,
-          height: 60,
-          fit: BoxFit.contain,
-        ),
-      ),
-      child: Container(
-        width: 90,
-        height: 90,
-        margin: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.grey, width: 1.5),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Center(
-          child: Image.asset(
-            'assets/images/$assetName',
-            fit: BoxFit.contain,
-            width: 60,
-            height: 60,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget buildFruitRows() {
-    final topRow = availableFruits.take(3).toList();
-    final bottomRow = availableFruits.skip(3).toList();
-
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: topRow.map((a) => dashedFruit(a)).toList(),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: bottomRow.map((a) => dashedFruit(a)).toList(),
-        ),
-      ],
-    );
+    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+
+    // base width 360 (HP kecil)
+    scale = screenWidth / 360;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: Stack(
           children: [
-            SingleChildScrollView(
-              child: Column(
-                children: [
-                  Stack(
-                    children: [
-                      Container(
-                        width: double.infinity,
-                        height: 66,
-                        color: const Color(0xFF45B56B),
-                        alignment: Alignment.center,
-                        child: const Text(
-                          'ENCODE & DECODE',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.5,
+            Column(
+              children: [
+                Stack(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      height: h(66),
+                      color: const Color(0xFF45B56B),
+                      alignment: Alignment.center,
+                      child: Text(
+                        'ENCODE & DECODE',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: sp(18),
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: EdgeInsets.only(left: w(18)),
+                          child: GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              width: w(30),
+                              height: h(30),
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Image.asset(
+                                'assets/images/back_icon.png',
+                                fit: BoxFit.contain,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                      Positioned.fill(
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 18),
-                            child: GestureDetector(
-                              onTap: () => Navigator.pop(context),
-                              child: Container(
-                                width: 30,
-                                height: 30,
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
+                    ),
+                    Positioned.fill(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Padding(
+                          padding: EdgeInsets.only(right: w(18)),
+                          child: GestureDetector(
+                            onTap: () async {
+                              AudioManager().playVoice('sounds/level_1&2.mp3');
+                            },
+                            child: Container(
+                              width: w(30),
+                              height: h(30),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(w(8)),
+                              ),
+                              child: Transform.scale(
+                                scale: 1.2,
                                 child: Image.asset(
-                                  'assets/images/back_icon.png',
+                                  "assets/images/volume.png",
                                   fit: BoxFit.contain,
                                 ),
                               ),
@@ -366,109 +351,53 @@ class _Level3ScreenState extends State<Level3Screen>
                           ),
                         ),
                       ),
-                      Positioned.fill(
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 18),
-                            child: GestureDetector(
-                              onTap: () async {
-                                AudioManager()
-                                    .playVoice('sounds/level_3&4.mp3');
-                              },
-                              child: Container(
-                                width: 30,
-                                height: 30,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Transform.scale(
-                                  scale: 1.2,
-                                  child: Image.asset(
-                                    "assets/images/volume.png",
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: h(18)),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: w(18)),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      ballLabel('ball1.png', '1'),
+                      ballLabel('ball2.png', '2'),
+                      ballLabel('ball3.png', '3'),
+                      ballLabel('ball4.png', '4'),
+                      ballLabel('ball5.png', '5'),
+                      ballLabel('ball6.png', '6'),
                     ],
                   ),
-                  const SizedBox(height: 18),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 18.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        fruitIcon('apple.png', '1'),
-                        fruitIcon('orange.png', '2'),
-                        fruitIcon('grapes.png', '3'),
-                        fruitIcon('mango.png', '4'),
-                        fruitIcon('bananas.png', '5'),
-                        fruitIcon('watermelon.png', '6'),
-                      ],
+                ),
+                SizedBox(height: h(18)),
+                Padding(
+                  padding: EdgeInsets.all(w(20)),
+                  child: Text(
+                    'Jumlahkan dengan tepat',
+                    style: TextStyle(
+                      fontSize: sp(16),
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
                     ),
                   ),
-                  const SizedBox(height: 18),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black, width: 2)),
-                      child: Row(
-                        children: [
-                          boxedNumber('3'),
-                          Container(width: 1, height: 100, color: Colors.black),
-                          boxedNumber('5'),
-                          Container(width: 1, height: 100, color: Colors.black),
-                          boxedNumber('6'),
-                        ],
-                      ),
-                    ),
+                ),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: List.generate(questionBalls.length, (i) {
+                      return sumRow(questionBalls[i], i);
+                    }),
                   ),
-                  const SizedBox(height: 18),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 28.0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black, width: 2)),
-                      child: Row(
-                        children: [
-                          boxedNumber('1'),
-                          Container(width: 1, height: 100, color: Colors.black),
-                          boxedNumber('2'),
-                          Container(width: 1, height: 100, color: Colors.black),
-                          boxedNumber('4'),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 18),
-                  const Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Text(
-                      'Cocokkan buah dengan angka!',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                  buildFruitRows(),
-                  const SizedBox(height: 100),
-                ],
-              ),
+                ),
+                NumberKeyboard(onKeyTap: handleInput),
+              ],
             ),
             if (showWin && winAnimasi != null)
               Center(
                 child: Lottie.asset(
                   winAnimasi!,
-                  width: 250,
-                  height: 250,
+                  width: w(250),
+                  height: w(250),
                   repeat: false,
                 ),
               ),
@@ -477,33 +406,34 @@ class _Level3ScreenState extends State<Level3Screen>
       ),
       floatingActionButton: hasWon
           ? Padding(
-              padding: const EdgeInsets.only(bottom: 16.0, right: 16.0),
+              padding: EdgeInsets.only(bottom: h(16), right: w(16)),
               child: Align(
                 alignment: Alignment.bottomRight,
                 child: ElevatedButton(
                   onPressed: () async {
-                    await DBHive.unlockNextLevel(3);
+                    await DBHive.unlockNextLevel(3);;
+
+                    _nextLevel();
 
                     // _backPage();
-                    _nextLevel();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.purpleAccent,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(15),
+                      borderRadius: BorderRadius.circular(w(15)),
                       side: const BorderSide(
                         color: Colors.purple,
                         width: 3,
                       ),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 12),
+                    padding: EdgeInsets.symmetric(
+                        horizontal: w(20), vertical: h(12)),
                     elevation: 6,
                   ),
                   child: Text(
                     "Lanjut",
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: sp(20),
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),

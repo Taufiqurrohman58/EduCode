@@ -1,8 +1,10 @@
+import 'package:educode/pages/main_nav_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; 
 import 'pages/splash_screen.dart';
-import 'pages/home_screen.dart';
-import 'pages/roadmap_screen.dart';
+import 'pages/pilih_konsep_game_screen.dart';
+import 'pages/pilih_konsep_materi_screen.dart';
+import 'pages/service_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'pages/db/db_hive.dart';
 
@@ -34,8 +36,10 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
-        '/home': (context) => const HomeScreen(),
-        '/roadmap': (context) => const RoadmapScreen(),
+        '/main': (context) => const MainNavScreen(),
+        '/pilih_level': (context) => const PilihKonsepGameScreen(),
+        '/pilih_materi': (context) => const PilihMateriScreen(),
+        '/service': (context) => const ServiceScreen(),
       },
     );
   }
